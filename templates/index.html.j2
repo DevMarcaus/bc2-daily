@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>BC2 Daily Delta Report</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body{font-family:system-ui,Arial,sans-serif; margin:20px; line-height:1.4;}
+    h1{margin-bottom:0}
+    .muted{color:#666}
+    table{border-collapse:collapse; width:100%; margin:12px 0}
+    th,td{border:1px solid #eee; padding:8px; text-align:left; font-size:14px}
+    th{background:#fafafa}
+    .grid{display:grid; grid-template-columns:1fr; gap:24px}
+    @media(min-width:900px){.grid{grid-template-columns:1fr 1fr}}
+    .pill{display:inline-block; padding:2px 8px; border-radius:12px; background:#eef}
+    .loss{background:#fee}
+    .gain{background:#efe}
+    .section{margin:24px 0}
+    .small{font-size:12px}
+  </style>
+</head>
+<body>
+  <h1>BC2 Daily Delta Report</h1>
+  <div class="muted small">Source: {{ meta.source_url }} • Generated on: {{ meta.generated_on }} • Block: {{ meta.block_height }} • Total Supply: {{ meta.total_supply_bc2 }} BC2</div>
+
+  {% for horizon in ["day","week","month"] %}
+  <div class="section">
+    <h2>Change vs {{ horizon }} prior <span class="pill">{{ comparisons[horizon].vs_date or "N/A" }}</span></h2>
+
+    <div class="grid">
+      <div>
+        <h3>New wallets</h3>
+        {% if comparisons[horizon].new_wallets %}
+          <table><tr><th>Address</th></tr>
+          {% for addr in comparisons[horizon].new_wallets[:100] %}
+            <tr><td>{{ addr }}</td></tr>
+          {% endfor %}
+          </table>
+        {% else %}
+          <div class="muted">No brand-new wallets detected.</div>
+        {% endif %}
+      </div>
+
+      <div>
+        <h3>Top 10 Gainers (BC2)</h3>
+        {% if comparisons[horizon].grown %}
+          <table><tr><th>Address</th><th>Δ BC2</th></tr>
+          {% for row in comparisons[horizon].grown[:10] %}
+            <tr><td>{{ row.Address }}</td><td class="gain">{{ "%.6f"|format(row.Delta_BC2) }}</td></tr>
+          {% endfor %}
+          </table>
+        {% else %}
+          <div class="muted">No growth recorded.</div>
+        {% endif %}
+      </div>
+
+      <div>
+        <h3>Top 10 Dumps (BC2)</h3>
+        {% if comparisons[horizon].dumped %}
+          <table><tr><th>Address</th><th>Δ BC2</th></tr>
+          {% for row in comparisons[horizon].dumped[:10] %}
+            <tr><td>{{ row.Address }}</td><td class="loss">-{{ "%.6f"|format(row.Delta_BC2) }}</td></tr>
+          {% endfor %}
+          </table>
+        {% else %}
+          <div class="muted">No reductions recorded.</div>
+        {% endif %}
+      </div>
+
+      <div>
+        <h3>Whale movement (Top 100)</h3>
+        <p>Net change among Top 100 since {{ comparisons[horizon].vs_date or "N/A" }}:
+          <strong>{{ "%.6f"|format(comparisons[horizon].top100_net_change or 0.0) }} BC2</strong>
+        </p>
+        <div class="small muted">Positive = accumulation; Negative = distribution.</div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <hr>
+  <div class="small muted">
+    Parsed from the public daily report. If the upstream format changes, parser rules may need an update.
+  </div>
+</body>
+</html>

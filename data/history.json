@@ -1,0 +1,34 @@
+{
+  "2025-10-19": {
+    "as_of": "2025-10-19",
+    "comparisons": {
+      "day": {
+        "new_wallets": [],
+        "grown": [],
+        "dumped": [],
+        "biggest_gainer": null,
+        "biggest_loser": null,
+        "top100_net_change": null,
+        "vs_date": null
+      },
+      "week": {
+        "new_wallets": [],
+        "grown": [],
+        "dumped": [],
+        "biggest_gainer": null,
+        "biggest_loser": null,
+        "top100_net_change": null,
+        "vs_date": null
+      },
+      "month": {
+        "new_wallets": [],
+        "grown": [],
+        "dumped": [],
+        "biggest_gainer": null,
+        "biggest_loser": null,
+        "top100_net_change": null,
+        "vs_date": null
+      }
+    }
+  }
+}
