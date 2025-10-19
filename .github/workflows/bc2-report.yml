@@ -1,0 +1,73 @@
+name: Build BC2 Daily
+
+on:
+  schedule:
+    - cron: '30 5 * * *'   # 05:30 UTC (~midnight ET)
+  workflow_dispatch: {}     # allow manual run
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install -r requirements.txt
+
+      - name: Scrape latest snapshot
+        run: python scripts/scrape_bc2.py
+
+      - name: Check for new snapshot
+        id: check
+        shell: bash
+        run: |
+          python - << 'PY'
+          import os, datetime as dt
+          d = dt.datetime.now(dt.timezone.utc).date().isoformat()
+          p = os.path.join("data", f"{d}.csv")
+          has_new = os.path.exists(p) and os.path.getsize(p) > 30
+          print(f"has_new={has_new}")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+            f.write(f"has_new={'true' if has_new else 'false'}\n")
+          PY
+
+      - name: Analyze day/week/month
+        if: steps.check.outputs.has_new == 'true'
+        run: python scripts/analyze_bc2.py
+
+      - name: Build static site
+        if: steps.check.outputs.has_new == 'true'
+        run: python scripts/build_site.py
+
+      - name: Commit site + data
+        if: steps.check.outputs.has_new == 'true'
+        run: |
+          git config user.name "bc2-bot"
+          git config user.email "actions@github.com"
+          git add -A
+          git commit -m "Daily update" || echo "No changes"
+          git push
+
+      - name: Upload site artifact
+        if: steps.check.outputs.has_new == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    if: needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
